@@ -9,6 +9,7 @@ import argparse
 import time
 
 from app.db.session import SessionLocal
+from app.config import settings
 from app.services.package_service import process_next_queued_package
 
 
@@ -28,6 +29,7 @@ def process_once() -> bool:
 
 
 def main() -> None:
+    settings.validate_production_configuration()
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true", help="Process at most one packet.")
     parser.add_argument("--poll-seconds", type=int, default=3)

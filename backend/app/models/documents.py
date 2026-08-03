@@ -77,6 +77,7 @@ class Document(Base):
     doc_type: Mapped[str] = mapped_column(Text, nullable=False)
     file_name: Mapped[str] = mapped_column(Text, nullable=False)
     file_path: Mapped[str | None] = mapped_column(Text)
+    storage_key: Mapped[str | None] = mapped_column(Text)
     mime_type: Mapped[str | None] = mapped_column(Text)
     page_count: Mapped[int | None] = mapped_column(Integer)
     document_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

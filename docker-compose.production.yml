@@ -1,0 +1,52 @@
+# Reference production runtime. Supply all values through an untracked .env.production.
+# Azure Container Apps or another managed runtime should run these services separately.
+services:
+  migrate:
+    build:
+      context: ./backend
+    environment: &backend_environment
+      ENVIRONMENT: production
+      DATABASE_URL: ${DATABASE_URL:?set a managed PostgreSQL URL}
+      STORAGE_BACKEND: azure_blob
+      AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING:?set from Key Vault}
+      AZURE_STORAGE_CONTAINER: ${AZURE_STORAGE_CONTAINER:?set a private container}
+      AUTH_REQUIRED: "true"
+      CORS_ORIGINS: ${CORS_ORIGINS:?set the public frontend origin}
+      DOCUMENT_INTELLIGENCE_ENDPOINT: ${DOCUMENT_INTELLIGENCE_ENDPOINT:-}
+      DOCUMENT_INTELLIGENCE_API_KEY: ${DOCUMENT_INTELLIGENCE_API_KEY:-}
+    command: alembic upgrade head
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+    environment: *backend_environment
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8000/api/health/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+    environment: *backend_environment
+    command: python scripts/run_worker.py
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:?set the public API URL}/api
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:?set the public API URL}/api
+    command: npm run start -- --hostname 0.0.0.0 --port 3000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

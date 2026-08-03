@@ -39,7 +39,8 @@ Right now:
 - PostgreSQL starts as infrastructure
 - backend serves FastAPI routes
 - frontend renders queue and packet review pages
-- package data is still coming from sample in-memory service data
+- package data is persisted in PostgreSQL or the configured local SQLite database
+- uploaded PDFs use the local storage adapter by default
 
 That means the stack is useful for:
 
@@ -47,7 +48,8 @@ That means the stack is useful for:
 - API contract iteration
 - UI review
 
-It is not yet using the database for live package reads.
+It is not a production deployment: use [DEPLOYMENT.md](/Users/hanlingjuan/Documents/vendor-onboarding-project/DEPLOYMENT.md)
+for the managed database, Blob Storage, and secret-management boundary.
 
 ## 4. Backend notes
 
@@ -131,7 +133,7 @@ It creates temporary PDFs and a temporary SQLite database, then verifies the
 missing-insurance, legal-name mismatch, missing-tax-ID, and OCR-required cases.
 It does not modify the local demo queue or send documents to Azure.
 
-## 6.3 Run queued processing locally
+## 6.4 Run queued processing locally
 
 New packets enter `processing` with queued ingestion/OCR runs. Process one queued
 packet from a separate terminal with:

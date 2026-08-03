@@ -22,6 +22,12 @@ from app.models.decisioning import (
 from app.models.documents import Document, DocumentPackage, DocumentRequirement, Vendor
 from app.models.processing import ExtractedField, FieldNormalization, ProcessingRun
 from app.config import settings
+from app.services.storage import (
+    StorageConfigurationError,
+    build_document_key,
+    get_document_storage,
+    legacy_local_document_key,
+)
 from app.schemas.packages import (
     PackageCreateRequest,
     PackageCreateResponse,
@@ -783,12 +789,15 @@ def upload_document_file(
 
     safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(file_name).name).strip("._")
     safe_name = safe_name or "uploaded-document.pdf"
-    upload_root = Path(settings.upload_dir).resolve()
-    destination = upload_root / package_id / f"{document.document_id}_{safe_name}"
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(contents)
+    storage_key = build_document_key(package_id, document.document_id, safe_name)
+    try:
+        get_document_storage().write_bytes(storage_key, contents)
+    except Exception as exc:
+        detail = "Document storage is not configured." if isinstance(exc, StorageConfigurationError) else "Document storage is unavailable."
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=detail) from exc
 
     document.file_name = safe_name
+    document.storage_key = storage_key
     document.file_path = f"/api/packages/{package_id}/documents/{document.document_id}/file"
     document.mime_type = "application/pdf"
     document.page_count = page_count
@@ -867,7 +876,7 @@ def upload_document_file(
     )
 
 
-def get_document_file(db: Session, package_id: str, document_id: str) -> tuple[Path, str, str]:
+def get_document_file(db: Session, package_id: str, document_id: str) -> tuple[bytes, str, str]:
     """Resolve a stored file after verifying package ownership from the database."""
     document = db.scalar(
         select(Document).where(
@@ -878,11 +887,14 @@ def get_document_file(db: Session, package_id: str, document_id: str) -> tuple[P
     if document is None or not document.file_path:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document file not found.")
 
-    upload_root = Path(settings.upload_dir).resolve()
-    file_path = upload_root / package_id / f"{document.document_id}_{document.file_name}"
-    if not file_path.is_file():
+    storage_key = document.storage_key or legacy_local_document_key(
+        package_id, document.document_id, document.file_name
+    )
+    try:
+        contents = get_document_storage().read_bytes(storage_key)
+    except (FileNotFoundError, OSError):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document file not found.")
-    return file_path, document.mime_type or "application/pdf", document.file_name
+    return contents, document.mime_type or "application/pdf", document.file_name
 
 
 def create_review_decision(
@@ -2053,15 +2065,15 @@ def _extract_uploaded_pdf_text(document: Document) -> DocumentTextExtraction | N
     """Use the PDF text layer first, then Azure OCR when configured."""
     if not _is_uploaded_pdf(document):
         return None
-    file_path = (
-        Path(settings.upload_dir).resolve()
-        / document.package_id
-        / f"{document.document_id}_{document.file_name}"
+    storage_key = document.storage_key or legacy_local_document_key(
+        document.package_id, document.document_id, document.file_name
     )
-    if not file_path.is_file():
+    try:
+        contents = get_document_storage().read_bytes(storage_key)
+    except (FileNotFoundError, OSError):
         return DocumentTextExtraction([], "file_unavailable", "Uploaded PDF file is unavailable.")
     try:
-        reader = PdfReader(file_path)
+        reader = PdfReader(BytesIO(contents))
         pages = [
             (page_number, page.extract_text() or "")
             for page_number, page in enumerate(reader.pages, start=1)
@@ -2071,10 +2083,10 @@ def _extract_uploaded_pdf_text(document: Document) -> DocumentTextExtraction | N
 
     if any(text.strip() for _page_number, text in pages):
         return DocumentTextExtraction(pages, "pdf_text_layer")
-    return _extract_with_azure_document_intelligence(file_path)
+    return _extract_with_azure_document_intelligence(contents)
 
 
-def _extract_with_azure_document_intelligence(file_path: Path) -> DocumentTextExtraction:
+def _extract_with_azure_document_intelligence(contents: bytes) -> DocumentTextExtraction:
     """Run Azure Read OCR only when credentials are explicitly configured."""
     endpoint = settings.document_intelligence_endpoint
     api_key = settings.document_intelligence_api_key
@@ -2093,10 +2105,7 @@ def _extract_with_azure_document_intelligence(file_path: Path) -> DocumentTextEx
             endpoint=endpoint,
             credential=AzureKeyCredential(api_key),
         )
-        with file_path.open("rb") as document_file:
-            result = client.begin_analyze_document(
-                "prebuilt-read", body=document_file
-            ).result()
+        result = client.begin_analyze_document("prebuilt-read", body=BytesIO(contents)).result()
         pages = [
             (
                 page_number,

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
+from app.config import settings
 
 
 app = FastAPI(
@@ -13,9 +14,12 @@ app = FastAPI(
     ),
 )
 
+# Fail during startup rather than serving a production process with local-only state.
+settings.validate_production_configuration()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=settings.allowed_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

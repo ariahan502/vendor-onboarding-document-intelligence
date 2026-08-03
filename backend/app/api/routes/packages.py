@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -89,10 +89,14 @@ async def upload_document(
 def download_document(
     package_id: str, document_id: str, db: Session = Depends(get_db),
     _: CurrentActor = Depends(require_roles("intake", "reviewer", "admin")),
-) -> FileResponse:
+) -> Response:
     """Return an uploaded file only when it belongs to the requested package."""
-    file_path, media_type, file_name = get_document_file(db, package_id, document_id)
-    return FileResponse(file_path, media_type=media_type, filename=file_name)
+    contents, media_type, file_name = get_document_file(db, package_id, document_id)
+    return Response(
+        content=contents,
+        media_type=media_type,
+        headers={"Content-Disposition": f'inline; filename="{file_name}"'},
+    )
 
 
 @router.post(

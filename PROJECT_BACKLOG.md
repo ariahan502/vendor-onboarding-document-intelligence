@@ -67,7 +67,10 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 
 ## Now
 
-No active implementation ticket. Select the highest-priority item from `Next` before starting new work.
+### T-014 Production Storage and Deployment
+
+- Status: in progress
+- Outcome: production-ready storage, database, secret, and deployment contracts replace reliance on local files and SQLite. Cloud resource provisioning remains a separate, account-dependent final step.
 
 ## Next
 
@@ -78,11 +81,6 @@ No active implementation ticket. Select the highest-priority item from `Next` be
 - Acceptance criteria: Azure text reaches extracted fields and source pages; failure paths remain visible and safe.
 
 ## Later
-
-### T-014 Production Storage and Deployment
-
-- Status: planned
-- Outcome: object storage, managed database, secret management, and a deployed environment replace local files and SQLite.
 
 ### T-015 Policy Configuration and Evaluation Dashboard
 

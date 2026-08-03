@@ -77,6 +77,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="vendor-onboarding-eval-") as temp_dir:
         temp_path = Path(temp_dir)
         os.environ["DATABASE_URL"] = f"sqlite+pysqlite:///{temp_path / 'evaluation.db'}"
+        os.environ["UPLOAD_DIR"] = str(temp_path / "uploads")
         os.environ.pop("DOCUMENT_INTELLIGENCE_ENDPOINT", None)
         os.environ.pop("DOCUMENT_INTELLIGENCE_API_KEY", None)
 
@@ -119,6 +120,12 @@ def main() -> None:
                     files={"file": (f"{doc_type}.pdf", build_pdf(text), "application/pdf")},
                 )
                 response.raise_for_status()
+                downloaded = client.get(
+                    f"/api/packages/{package_id}/documents/{response.json()['document_id']}/file"
+                )
+                download_passed = downloaded.status_code == 200 and downloaded.content == build_pdf(text)
+                if not download_passed:
+                    failures.append(f"{scenario['name']} document download failed through storage boundary")
 
             processed = client.post(f"/api/packages/{package_id}/simulate-processing")
             processed.raise_for_status()
@@ -288,6 +295,17 @@ def main() -> None:
         print("PASS audit_export_chain" if audit_export_passed else "FAIL audit_export_chain")
         if not audit_export_passed:
             failures.append("audit_export_chain did not preserve the event chain")
+
+        from app.config import Settings
+
+        production_rejected = False
+        try:
+            Settings(environment="production").validate_production_configuration()
+        except ValueError:
+            production_rejected = True
+        print("PASS production_configuration_guard" if production_rejected else "FAIL production_configuration_guard")
+        if not production_rejected:
+            failures.append("production_configuration_guard accepted unsafe defaults")
 
         if failures:
             raise SystemExit("Evaluation failed:\n" + "\n".join(failures))

@@ -35,6 +35,7 @@ create table documents (
   doc_type text not null,
   file_name text not null,
   file_path text,
+  storage_key text,
   mime_type text,
   page_count int,
   document_version int not null default 1,

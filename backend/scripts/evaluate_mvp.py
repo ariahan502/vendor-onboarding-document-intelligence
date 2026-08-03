@@ -284,6 +284,11 @@ def main() -> None:
         print("PASS policy_catalogue" if policy_catalogue_passed else "FAIL policy_catalogue")
         if not policy_catalogue_passed:
             failures.append("policy_catalogue did not expose the baseline rules")
+        evaluation_summary = client.get("/api/evaluations/summary")
+        evaluation_summary_passed = evaluation_summary.status_code == 200 and evaluation_summary.json()["run_count"] == 0
+        print("PASS evaluation_summary" if evaluation_summary_passed else "FAIL evaluation_summary")
+        if not evaluation_summary_passed:
+            failures.append("evaluation_summary did not return an empty safe baseline")
         audit_export = client.get("/api/audit-events/export")
         audit_export.raise_for_status()
         audit_events = audit_export.json()["events"]

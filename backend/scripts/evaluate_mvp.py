@@ -278,6 +278,12 @@ def main() -> None:
             failures.append("role_guards did not reject unprivileged decision or audit export")
 
         client.headers.update({"X-Actor-ID": "audit.admin", "X-Actor-Role": "admin"})
+        policy_catalogue = client.get("/api/policy-rules/")
+        policy_catalogue.raise_for_status()
+        policy_catalogue_passed = len(policy_catalogue.json()["rules"]) >= 4
+        print("PASS policy_catalogue" if policy_catalogue_passed else "FAIL policy_catalogue")
+        if not policy_catalogue_passed:
+            failures.append("policy_catalogue did not expose the baseline rules")
         audit_export = client.get("/api/audit-events/export")
         audit_export.raise_for_status()
         audit_events = audit_export.json()["events"]

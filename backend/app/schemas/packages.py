@@ -238,3 +238,18 @@ class AuditExportResponse(BaseModel):
     event_count: int
     chain_head: str | None
     events: list[AuditEventSummary]
+
+
+class PolicyRuleSummary(BaseModel):
+    rule_id: str
+    rule_code: str
+    rule_name: str
+    description: str
+    severity: str
+    decision_impact: str | None
+    rule_version: str
+    is_active: bool
+
+
+class PolicyRuleListResponse(BaseModel):
+    rules: list[PolicyRuleSummary]

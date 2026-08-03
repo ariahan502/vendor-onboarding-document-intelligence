@@ -72,6 +72,11 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 - Status: in progress
 - Outcome: production-ready storage, database, secret, and deployment contracts replace reliance on local files and SQLite. Cloud resource provisioning remains a separate, account-dependent final step.
 
+### T-015 Policy Configuration and Evaluation Dashboard
+
+- Status: in progress
+- Outcome: policy catalogue is available through an admin-only API. Versioned edits and evaluation metrics remain next so a rule change cannot silently alter routing.
+
 ## Next
 
 ### T-011 Actual Azure OCR Validation
@@ -81,11 +86,6 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 - Acceptance criteria: Azure text reaches extracted fields and source pages; failure paths remain visible and safe.
 
 ## Later
-
-### T-015 Policy Configuration and Evaluation Dashboard
-
-- Status: planned
-- Outcome: policy thresholds and evaluation results can be reviewed without code changes.
 
 ## Operating Rule
 

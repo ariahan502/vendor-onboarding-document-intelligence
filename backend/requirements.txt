@@ -1,0 +1,10 @@
+alembic
+fastapi
+httpx
+sqlalchemy
+psycopg[binary]
+pydantic-settings
+uvicorn
+pypdf
+python-multipart
+azure-ai-documentintelligence

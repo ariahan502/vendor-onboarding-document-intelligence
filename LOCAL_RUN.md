@@ -1,0 +1,171 @@
+# Local Run
+
+## Goal
+
+Run the current project locally with:
+
+- PostgreSQL
+- FastAPI backend
+- Next.js frontend
+
+This setup is meant for early development and UI/API iteration, not production deployment.
+
+## 1. Current services
+
+The local stack includes:
+
+- `postgres` on port `5432`
+- `backend` on port `8000`
+- `frontend` on port `3000`
+
+## 2. Start with Docker Compose
+
+From the repo root:
+
+```bash
+docker compose up --build
+```
+
+Expected local URLs:
+
+- frontend: `http://localhost:3000`
+- backend health: `http://localhost:8000/api/health`
+- package queue API: `http://localhost:8000/api/packages/`
+
+## 3. Current behavior
+
+Right now:
+
+- PostgreSQL starts as infrastructure
+- backend serves FastAPI routes
+- frontend renders queue and packet review pages
+- package data is still coming from sample in-memory service data
+
+That means the stack is useful for:
+
+- page development
+- API contract iteration
+- UI review
+
+It is not yet using the database for live package reads.
+
+## 4. Backend notes
+
+The backend container uses:
+
+- `backend/Dockerfile`
+- `backend/requirements.txt`
+- `uvicorn app.main:app --reload`
+
+The database URL inside Docker is:
+
+`postgresql+psycopg://postgres:postgres@postgres:5432/vendor_onboarding`
+
+For local non-Docker development, the backend now defaults to:
+
+`sqlite+pysqlite:///./dev.db`
+
+## 5. Frontend notes
+
+The frontend container uses:
+
+- `frontend/Dockerfile`
+- `frontend/package.json`
+- Next.js dev server on port `3000`
+
+The frontend points to:
+
+`NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api`
+
+## 6. What is still missing
+
+This setup does not yet include:
+
+- seed ingestion into the database
+- real DB-backed package queries
+
+## 6.1 Optional Azure OCR for scanned PDFs
+
+Text-based PDFs are parsed locally. For scanned PDFs, configure Azure AI Document
+Intelligence by adding these values to `backend/.env`:
+
+```bash
+DOCUMENT_INTELLIGENCE_ENDPOINT=https://<resource-name>.cognitiveservices.azure.com/
+DOCUMENT_INTELLIGENCE_API_KEY=<resource-key>
+```
+
+The service uses Azure's `prebuilt-read` model only when both values are present.
+Without them, scanned documents remain in `OCR required` status and receive a
+review finding instead of fabricated fields.
+
+## 6.2 Run the MVP evaluation suite
+
+Run the deterministic evaluation suite from the project root:
+
+```bash
+make evaluate
+```
+
+It creates temporary PDFs and a temporary SQLite database, then verifies the
+missing-insurance, legal-name mismatch, missing-tax-ID, and OCR-required cases.
+It does not modify the local demo queue or send documents to Azure.
+
+## 6.3 Run queued processing locally
+
+New packets enter `processing` with queued ingestion/OCR runs. Process one queued
+packet from a separate terminal with:
+
+```bash
+make worker-once
+```
+
+For continuous processing, run `python backend/scripts/run_worker.py` with the
+same `PYTHONPATH` environment used by the backend. Docker Compose starts the worker
+service automatically.
+
+Those are the next implementation steps.
+
+## 7. Recommended next step after this
+
+Once the stack is running, the most useful next work is:
+
+1. run Alembic migration to create the schema
+2. create seed packet records
+3. replace sample service data with SQLAlchemy queries
+
+## 8. Database initialization options
+
+### Option A. Preferred: Alembic migration
+
+From inside the backend container or backend directory:
+
+```bash
+alembic upgrade head
+```
+
+### Option B. Fast local bootstrap: metadata create
+
+```bash
+python scripts/init_db.py
+```
+
+Use this only for quick local iteration. Alembic should remain the primary schema evolution path.
+
+### Option C. Fastest no-Docker path
+
+If Docker or local Postgres is unavailable, you can still run the backend against SQLite:
+
+1. use the default `DATABASE_URL` from `backend/.env.example`
+2. run:
+
+```bash
+python scripts/init_db.py
+python scripts/seed_demo_data.py
+python scripts/smoke_test_api.py
+```
+
+This is enough to validate:
+
+- schema creation
+- seed loading
+- queue and packet detail API behavior

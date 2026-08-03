@@ -1,0 +1,258 @@
+"""Run deterministic regression checks for the vendor onboarding MVP.
+
+The suite creates an isolated SQLite database and temporary PDFs, so it never changes
+the local demo queue. It intentionally leaves Azure OCR unconfigured to verify the
+safe manual-review fallback for scanned documents.
+"""
+
+import os
+import tempfile
+from pathlib import Path
+
+
+def build_pdf(text: str) -> bytes:
+    """Create a minimal text PDF without adding a test-only dependency."""
+    escaped_text = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    stream = f"BT /F1 12 Tf 72 720 Td ({escaped_text}) Tj ET".encode()
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
+    ]
+    output = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for object_id, content in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{object_id} 0 obj\n".encode())
+        output.extend(content)
+        output.extend(b"\nendobj\n")
+    xref_offset = len(output)
+    output.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode())
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n \n".encode())
+    output.extend(
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode()
+    )
+    return bytes(output)
+
+
+SCENARIOS = [
+    {
+        "name": "missing_insurance",
+        "documents": {
+            "contract": "Vendor: Acme Vendor LLC  Payment Terms: Net 30",
+            "w9": "Legal Name: Acme Vendor LLC  EIN: 12-3456789",
+        },
+        "expected_titles": ["Missing required insurance certificate"],
+    },
+    {
+        "name": "name_mismatch",
+        "documents": {
+            "contract": "Vendor: Acme Vendor LLC  Payment Terms: Net 45",
+            "w9": "Legal Name: Acme Vendor Incorporated  EIN: 12-3456789",
+            "insurance_certificate": "Coverage: $1,000,000",
+        },
+        "expected_titles": ["Vendor legal name differs between contract and W-9"],
+    },
+    {
+        "name": "tax_id_gap",
+        "documents": {
+            "contract": "Vendor: Acme Vendor LLC  Payment Terms: Net 30",
+            "w9": "Legal Name: Acme Vendor LLC",
+            "insurance_certificate": "Coverage: $1,000,000",
+        },
+        "expected_titles": ["Tax ID could not be extracted from uploaded W-9"],
+    },
+    {
+        "name": "scanned_w9_needs_ocr",
+        "documents": {"w9": ""},
+        "expected_titles": ["OCR required for uploaded w9"],
+    },
+]
+
+
+def main() -> None:
+    with tempfile.TemporaryDirectory(prefix="vendor-onboarding-eval-") as temp_dir:
+        temp_path = Path(temp_dir)
+        os.environ["DATABASE_URL"] = f"sqlite+pysqlite:///{temp_path / 'evaluation.db'}"
+        os.environ.pop("DOCUMENT_INTELLIGENCE_ENDPOINT", None)
+        os.environ.pop("DOCUMENT_INTELLIGENCE_API_KEY", None)
+
+        from fastapi.testclient import TestClient
+
+        from app.db.base_metadata import Base
+        from app.db.session import SessionLocal, engine
+        from app.main import app
+        from app.services.package_service import process_next_queued_package
+
+        Base.metadata.create_all(bind=engine)
+        client = TestClient(app)
+        failures: list[str] = []
+
+        for scenario in SCENARIOS:
+            package = client.post(
+                "/api/packages/",
+                json={
+                    "vendor_name": "Acme Vendor LLC",
+                    "tax_id": None,
+                    "country": "US",
+                    "category": "consulting",
+                    "assigned_reviewer": "evaluation.runner",
+                    "submitted_documents": [
+                        {"doc_type": doc_type, "file_name": f"{doc_type}.pdf"}
+                        for doc_type in scenario["documents"]
+                    ],
+                },
+            )
+            package.raise_for_status()
+            package_id = package.json()["package_id"]
+
+            for doc_type, text in scenario["documents"].items():
+                response = client.post(
+                    f"/api/packages/{package_id}/documents",
+                    data={"doc_type": doc_type},
+                    files={"file": (f"{doc_type}.pdf", build_pdf(text), "application/pdf")},
+                )
+                response.raise_for_status()
+
+            processed = client.post(f"/api/packages/{package_id}/simulate-processing")
+            processed.raise_for_status()
+            detail = client.get(f"/api/packages/{package_id}")
+            detail.raise_for_status()
+            titles = [finding["title"] for finding in detail.json()["findings"]]
+            missing_titles = [
+                title for title in scenario["expected_titles"] if title not in titles
+            ]
+            status = "PASS" if not missing_titles else "FAIL"
+            print(f"{status} {scenario['name']}: {', '.join(titles)}")
+            if missing_titles:
+                failures.append(f"{scenario['name']} missing: {', '.join(missing_titles)}")
+
+            if scenario["name"] == "missing_insurance":
+                denied = client.post(
+                    f"/api/packages/{package_id}/decisions",
+                    json={
+                        "reviewer": "evaluation.runner",
+                        "final_decision": "approve",
+                        "reviewer_comment": "Attempting approval without override.",
+                        "override_reason": None,
+                    },
+                )
+                allowed = client.post(
+                    f"/api/packages/{package_id}/decisions",
+                    json={
+                        "reviewer": "evaluation.runner",
+                        "final_decision": "approve",
+                        "reviewer_comment": "Document was independently verified.",
+                        "override_reason": "Insurance evidence was independently verified.",
+                    },
+                )
+                approval_guard_passed = denied.status_code == 422 and allowed.status_code == 200
+                print("PASS approval_override_guard" if approval_guard_passed else "FAIL approval_override_guard")
+                if not approval_guard_passed:
+                    failures.append("approval_override_guard did not enforce an override reason")
+
+                insurance_finding = next(
+                    finding
+                    for finding in detail.json()["findings"]
+                    if finding["title"] == "Missing required insurance certificate"
+                )
+                resolution = client.post(
+                    f"/api/packages/{package_id}/finding-resolutions",
+                    json={
+                        "finding_id": insurance_finding["finding_id"],
+                        "reviewer": "evaluation.runner",
+                        "resolution_status": "accepted_risk",
+                        "resolution_note": "Coverage exception was approved outside the workflow.",
+                    },
+                )
+                resolved_detail = client.get(f"/api/packages/{package_id}")
+                resolved_detail.raise_for_status()
+                resolution_state = next(
+                    finding
+                    for finding in resolved_detail.json()["findings"]
+                    if finding["finding_id"] == insurance_finding["finding_id"]
+                )
+                approved_after_resolution = client.post(
+                    f"/api/packages/{package_id}/decisions",
+                    json={
+                        "reviewer": "evaluation.runner",
+                        "final_decision": "approve",
+                        "reviewer_comment": "Accepted risk has been documented.",
+                        "override_reason": None,
+                    },
+                )
+                resolution_passed = (
+                    resolution.status_code == 200
+                    and resolution_state["finding_status"] == "accepted_risk"
+                    and approved_after_resolution.status_code == 200
+                )
+                print("PASS finding_resolution_lifecycle" if resolution_passed else "FAIL finding_resolution_lifecycle")
+                if not resolution_passed:
+                    failures.append("finding_resolution_lifecycle did not update approval behavior")
+
+            if scenario["name"] == "name_mismatch":
+                field = detail.json()["extracted_fields"][0]
+                correction = client.post(
+                    f"/api/packages/{package_id}/field-overrides",
+                    json={
+                        "field_id": field["field_id"],
+                        "reviewer": "evaluation.runner",
+                        "corrected_value": "Acme Vendor LLC (verified)",
+                        "correction_reason": "Verified against the signed contract.",
+                    },
+                )
+                correction.raise_for_status()
+                corrected_detail = client.get(f"/api/packages/{package_id}")
+                corrected_detail.raise_for_status()
+                overrides = corrected_detail.json()["field_overrides"]
+                correction_passed = (
+                    overrides
+                    and overrides[0]["field_id"] == field["field_id"]
+                    and overrides[0]["original_value"] == field["raw_value"]
+                )
+                print(
+                    "PASS field_correction_audit"
+                    if correction_passed
+                    else "FAIL field_correction_audit"
+                )
+                if not correction_passed:
+                    failures.append("field_correction_audit did not preserve original value")
+
+        queued = client.post(
+            "/api/packages/",
+            json={
+                "vendor_name": "Queued Worker Test LLC",
+                "tax_id": None,
+                "country": "US",
+                "category": "consulting",
+                "assigned_reviewer": "evaluation.runner",
+                "submitted_documents": [],
+            },
+        )
+        queued.raise_for_status()
+        queued_id = queued.json()["package_id"]
+        db = SessionLocal()
+        try:
+            worker_result = process_next_queued_package(db)
+        finally:
+            db.close()
+        queued_detail = client.get(f"/api/packages/{queued_id}")
+        queued_detail.raise_for_status()
+        worker_passed = (
+            worker_result is not None
+            and worker_result.package_id == queued_id
+            and queued_detail.json()["package_status"] == "ready_for_review"
+        )
+        print("PASS queued_worker_boundary" if worker_passed else "FAIL queued_worker_boundary")
+        if not worker_passed:
+            failures.append("queued_worker_boundary did not process the queued packet")
+
+        if failures:
+            raise SystemExit("Evaluation failed:\n" + "\n".join(failures))
+
+
+if __name__ == "__main__":
+    main()

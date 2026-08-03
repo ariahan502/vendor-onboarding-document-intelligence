@@ -1,0 +1,95 @@
+# Vendor Onboarding Document Intelligence Backlog
+
+This is the working ticket board for the MVP. Each ticket has a concrete outcome
+and acceptance criteria so that work can be closed instead of remaining vague.
+
+## Done
+
+### T-001 Product and Data Contract
+
+- Status: done
+- Outcome: practical procurement problem, MVP boundaries, system plan, SQL schema, and demo flow are documented.
+
+### T-002 Reviewer Queue and Decision Workflow
+
+- Status: done
+- Outcome: reviewers can inspect a packet, evidence, findings, and submit a final decision.
+
+### T-003 Real PDF Intake
+
+- Status: done
+- Outcome: PDFs upload locally, are validated, stored, served through a protected API route, and shown in the review workspace.
+
+### T-004 Text-PDF Extraction and Deterministic Rules
+
+- Status: done
+- Outcome: text PDFs provide vendor name, tax ID, payment terms, and coverage candidates; missing documents, name mismatches, and tax gaps create findings.
+
+### T-005 Scan-Safe OCR Workflow
+
+- Status: done
+- Outcome: scanned PDFs enter `OCR required` rather than receiving fabricated fields; Azure Document Intelligence is an optional adapter.
+
+### T-006 Regression Evaluation Harness
+
+- Status: done
+- Outcome: an isolated `make evaluate` suite verifies missing insurance, name mismatch, tax gap, scan/OCR fallback, approval guard, and correction audit.
+
+### T-007 Reviewer Field Corrections
+
+- Status: done
+- Outcome: reviewers can correct an extracted field without overwriting the model output; original value, correction, reason, reviewer, and time are retained.
+
+### T-008 Approval Override Guard
+
+- Status: done
+- Outcome: approving a packet with open high-risk findings requires an explicit override reason in both UI and API.
+
+### T-009 Finding Lifecycle and Resolution Notes
+
+- Status: done
+- Outcome: reviewers can mark findings `resolved`, `accepted risk`, or `not applicable` with an append-only explanation; approval protection considers only open high-risk findings.
+
+### T-010 Queue Operations Metrics
+
+- Status: done
+- Outcome: the queue reports open high-risk packets, OCR-blocked packets, missing documents, average review age, and decision override rate from live queue data.
+
+### T-012 Background Processing Boundary
+
+- Status: done
+- Outcome: new packets create queued processing runs; a polling worker claims pending packets and Docker Compose includes a worker service. The evaluation suite verifies worker handoff.
+
+## Now
+
+No active implementation ticket. Select the highest-priority item from `Next` before starting new work.
+
+## Next
+
+### T-011 Actual Azure OCR Validation
+
+- Status: blocked on Azure access
+- Outcome: configure a Document Intelligence resource and validate a real scanned W-9 through the full OCR path.
+- Acceptance criteria: Azure text reaches extracted fields and source pages; failure paths remain visible and safe.
+
+### T-013 Access Control and Audit Hardening
+
+- Status: planned
+- Outcome: authenticated reviewer identity, role checks, and immutable audit export for decisions and corrections.
+
+## Later
+
+### T-014 Production Storage and Deployment
+
+- Status: planned
+- Outcome: object storage, managed database, secret management, and a deployed environment replace local files and SQLite.
+
+### T-015 Policy Configuration and Evaluation Dashboard
+
+- Status: planned
+- Outcome: policy thresholds and evaluation results can be reviewed without code changes.
+
+## Operating Rule
+
+Work only one `Now` ticket at a time. A ticket moves to `Done` only after its
+acceptance criteria and the relevant regression checks pass.

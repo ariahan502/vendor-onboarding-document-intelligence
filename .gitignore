@@ -15,6 +15,7 @@ frontend/.env.local
 postgres-data/
 dev.db
 backend/dev.db
+backend/dev.db.*.bak
 uploads/
 .pnpm-store/
 backend/.vendor/

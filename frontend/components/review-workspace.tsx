@@ -126,12 +126,12 @@ export function ReviewWorkspace({ packet }: ReviewWorkspaceProps) {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "280px minmax(0, 1fr) 380px",
+            gridTemplateColumns: "minmax(280px, 0.85fr) minmax(0, 2fr) minmax(340px, 1.1fr)",
             gap: 20,
             alignItems: "start",
           }}
         >
-          <aside className="surface-card" style={{ padding: 18, display: "grid", gap: 18 }}>
+          <aside className="surface-card" style={{ padding: 18, display: "grid", gap: 18, minWidth: 0, position: "relative", zIndex: 1 }}>
             <PanelTitle eyebrow="Packet" title="Document List" />
             {packet.documents.length === 0 ? (
               <EmptyState

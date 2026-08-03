@@ -26,7 +26,6 @@ export function DecisionPanel({
   openHighRiskFindings,
 }: DecisionPanelProps) {
   const router = useRouter();
-  const [reviewer, setReviewer] = useState("aria.han");
   const [comment, setComment] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -37,7 +36,8 @@ export function DecisionPanel({
       setSubmitting(finalDecision);
       setStatusMessage(null);
       await postReviewDecision(packageId, {
-        reviewer,
+        // The API replaces this compatibility value with the authenticated actor.
+        reviewer: "session-identity",
         final_decision: finalDecision,
         reviewer_comment: comment || null,
         override_reason:
@@ -83,15 +83,9 @@ export function DecisionPanel({
         {notes ?? "Add a reviewer decision and note to move this packet forward."}
       </div>
 
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, color: "var(--muted)" }}>Reviewer</span>
-        <input
-          value={reviewer}
-          onChange={(event) => setReviewer(event.target.value)}
-          placeholder="reviewer id"
-          style={inputStyle}
-        />
-      </label>
+      <div style={{ fontSize: 13, color: "var(--muted)" }}>
+        The signed-in reviewer identity is recorded by the server.
+      </div>
 
       {openHighRiskFindings.length > 0 ? (
         <label style={{ display: "grid", gap: 6 }}>
@@ -127,7 +121,6 @@ export function DecisionPanel({
             onClick={() => handleSubmit(action.value)}
             disabled={
               submitting !== null ||
-              reviewer.trim().length === 0 ||
               (action.value === "approve" &&
                 openHighRiskFindings.length > 0 &&
                 overrideReason.trim().length < 3)
@@ -137,7 +130,6 @@ export function DecisionPanel({
               opacity: submitting !== null && submitting !== action.value ? 0.5 : 1,
               cursor:
                 submitting !== null ||
-                reviewer.trim().length === 0 ||
                 (action.value === "approve" &&
                   openHighRiskFindings.length > 0 &&
                   overrideReason.trim().length < 3)

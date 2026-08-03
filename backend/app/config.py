@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     document_intelligence_endpoint: str | None = None
     document_intelligence_api_key: str | None = None
+    auth_required: bool = False
+    development_actor_id: str = "aria.han"
+    development_actor_role: str = "admin"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -98,7 +98,28 @@ The service uses Azure's `prebuilt-read` model only when both values are present
 Without them, scanned documents remain in `OCR required` status and receive a
 review finding instead of fabricated fields.
 
-## 6.2 Run the MVP evaluation suite
+## 6.2 Identity, roles, and audit export
+
+Local development uses the configured `DEVELOPMENT_ACTOR_ID` and
+`DEVELOPMENT_ACTOR_ROLE` defaults so the demo works without a login page. In a
+deployed environment, set `AUTH_REQUIRED=true` and place an authenticated gateway
+in front of the API. The gateway must set trusted `X-Actor-ID` and `X-Actor-Role`
+headers; accepted roles are `intake`, `reviewer`, and `admin`.
+
+The MVP deliberately does not implement its own password, session, or OAuth
+provider. That belongs to the company identity platform (for example Microsoft
+Entra ID), which must authenticate the user before forwarding these headers.
+
+Admins can export the append-only audit ledger at:
+
+```text
+GET /api/audit-events/export
+```
+
+Each event carries the previous event hash and its own hash. Store exports outside
+the application database for long-term retention and independent verification.
+
+## 6.3 Run the MVP evaluation suite
 
 Run the deterministic evaluation suite from the project root:
 

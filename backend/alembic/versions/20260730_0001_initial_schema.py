@@ -10,6 +10,10 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 
+# SQLite powers local development while PostgreSQL keeps its native JSONB storage.
+JSON_TYPE = sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), "postgresql")
+
+
 revision = "20260730_0001"
 down_revision = None
 branch_labels = None
@@ -165,7 +169,7 @@ def upgrade() -> None:
         sa.Column("confidence", sa.Numeric(5, 4), nullable=True),
         sa.Column("source_page", sa.Integer(), nullable=True),
         sa.Column("source_span_text", sa.Text(), nullable=True),
-        sa.Column("source_bbox", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("source_bbox", JSON_TYPE, nullable=True),
         sa.Column(
             "extracted_at",
             sa.DateTime(timezone=True),
@@ -192,7 +196,7 @@ def upgrade() -> None:
         sa.Column("normalized_value", sa.Text(), nullable=True),
         sa.Column(
             "normalized_value_json",
-            postgresql.JSONB(astext_type=sa.Text()),
+            JSON_TYPE,
             nullable=True,
         ),
         sa.Column("normalization_method", sa.Text(), nullable=False),
@@ -372,7 +376,7 @@ def upgrade() -> None:
         sa.Column("evidence_type", sa.Text(), nullable=False),
         sa.Column("page_num", sa.Integer(), nullable=True),
         sa.Column("snippet_text", sa.Text(), nullable=True),
-        sa.Column("bbox", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("bbox", JSON_TYPE, nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -428,12 +432,12 @@ def upgrade() -> None:
         sa.Column("case_slice", sa.Text(), nullable=True),
         sa.Column(
             "expected_fields",
-            postgresql.JSONB(astext_type=sa.Text()),
+            JSON_TYPE,
             nullable=True,
         ),
         sa.Column(
             "expected_findings",
-            postgresql.JSONB(astext_type=sa.Text()),
+            JSON_TYPE,
             nullable=True,
         ),
         sa.Column("expected_decision", sa.Text(), nullable=True),

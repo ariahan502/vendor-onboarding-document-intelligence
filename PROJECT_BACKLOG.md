@@ -60,6 +60,11 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 - Status: done
 - Outcome: new packets create queued processing runs; a polling worker claims pending packets and Docker Compose includes a worker service. The evaluation suite verifies worker handoff.
 
+### T-013 Access Control and Audit Hardening
+
+- Status: done
+- Outcome: trusted actor identity and role checks protect operational routes; reviewer names are server-controlled; privileged actions emit append-only hash-chained audit events and admins can export the ledger.
+
 ## Now
 
 No active implementation ticket. Select the highest-priority item from `Next` before starting new work.
@@ -71,11 +76,6 @@ No active implementation ticket. Select the highest-priority item from `Next` be
 - Status: blocked on Azure access
 - Outcome: configure a Document Intelligence resource and validate a real scanned W-9 through the full OCR path.
 - Acceptance criteria: Azure text reaches extracted fields and source pages; failure paths remain visible and safe.
-
-### T-013 Access Control and Audit Hardening
-
-- Status: planned
-- Outcome: authenticated reviewer identity, role checks, and immutable audit export for decisions and corrections.
 
 ## Later
 

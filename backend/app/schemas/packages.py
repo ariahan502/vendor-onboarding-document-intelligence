@@ -217,3 +217,24 @@ class PackageSimulationResponse(BaseModel):
     package_status: str
     system_recommendation: str | None
     finding_count: int
+
+
+class AuditEventSummary(BaseModel):
+    event_id: str
+    actor_id: str
+    actor_role: str
+    action: str
+    package_id: str | None
+    resource_type: str
+    resource_id: str | None
+    event_metadata: dict | None
+    previous_event_hash: str | None
+    event_hash: str
+    created_at: datetime
+
+
+class AuditExportResponse(BaseModel):
+    generated_at: datetime
+    event_count: int
+    chain_head: str | None
+    events: list[AuditEventSummary]

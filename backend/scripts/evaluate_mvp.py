@@ -89,6 +89,9 @@ def main() -> None:
 
         Base.metadata.create_all(bind=engine)
         client = TestClient(app)
+        client.headers.update(
+            {"X-Actor-ID": "evaluation.runner", "X-Actor-Role": "admin"}
+        )
         failures: list[str] = []
 
         for scenario in SCENARIOS:
@@ -249,6 +252,42 @@ def main() -> None:
         print("PASS queued_worker_boundary" if worker_passed else "FAIL queued_worker_boundary")
         if not worker_passed:
             failures.append("queued_worker_boundary did not process the queued packet")
+
+        client.headers.update({"X-Actor-ID": "intake.runner", "X-Actor-Role": "intake"})
+        role_denied = client.post(
+            f"/api/packages/{queued_id}/decisions",
+            json={
+                "reviewer": "spoofed.actor",
+                "final_decision": "approve",
+                "reviewer_comment": "Intake must not decide.",
+            },
+        )
+        intake_export_denied = client.get("/api/audit-events/export")
+        role_guard_passed = (
+            role_denied.status_code == 403 and intake_export_denied.status_code == 403
+        )
+        print("PASS role_guards" if role_guard_passed else "FAIL role_guards")
+        if not role_guard_passed:
+            failures.append("role_guards did not reject unprivileged decision or audit export")
+
+        client.headers.update({"X-Actor-ID": "audit.admin", "X-Actor-Role": "admin"})
+        audit_export = client.get("/api/audit-events/export")
+        audit_export.raise_for_status()
+        audit_events = audit_export.json()["events"]
+        chain_is_intact = all(
+            event["previous_event_hash"] == audit_events[index - 1]["event_hash"]
+            for index, event in enumerate(audit_events)
+            if index > 0
+        )
+        audit_export_passed = (
+            bool(audit_events)
+            and chain_is_intact
+            and audit_export.json()["chain_head"] == audit_events[-1]["event_hash"]
+            and any(event["action"] == "review.decision_created" for event in audit_events)
+        )
+        print("PASS audit_export_chain" if audit_export_passed else "FAIL audit_export_chain")
+        if not audit_export_passed:
+            failures.append("audit_export_chain did not preserve the event chain")
 
         if failures:
             raise SystemExit("Evaluation failed:\n" + "\n".join(failures))

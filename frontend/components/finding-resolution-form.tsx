@@ -14,7 +14,6 @@ type FindingResolutionFormProps = {
 export function FindingResolutionForm({ packageId, findingId }: FindingResolutionFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [reviewer, setReviewer] = useState("aria.han");
   const [status, setStatus] = useState<FindingResolutionCreateRequest["resolution_status"]>("resolved");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -26,7 +25,8 @@ export function FindingResolutionForm({ packageId, findingId }: FindingResolutio
       setMessage(null);
       await postFindingResolution(packageId, {
         finding_id: findingId,
-        reviewer,
+        // The API replaces this compatibility value with the authenticated actor.
+        reviewer: "session-identity",
         resolution_status: status,
         resolution_note: note,
       });
@@ -47,14 +47,14 @@ export function FindingResolutionForm({ packageId, findingId }: FindingResolutio
       </button>
       {isOpen ? (
         <div style={{ display: "grid", gap: 8 }}>
-          <input value={reviewer} onChange={(event) => setReviewer(event.target.value)} placeholder="Reviewer" style={inputStyle} />
+          <span style={{ color: "var(--muted)", fontSize: 13 }}>Your signed-in identity will be recorded with this resolution.</span>
           <select value={status} onChange={(event) => setStatus(event.target.value as FindingResolutionCreateRequest["resolution_status"])} style={inputStyle}>
             <option value="resolved">Resolved</option>
             <option value="accepted_risk">Accepted risk</option>
             <option value="not_applicable">Not applicable</option>
           </select>
           <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain how this finding was handled." rows={3} style={{ ...inputStyle, resize: "vertical" }} />
-          <button type="button" onClick={submit} disabled={saving || !reviewer.trim() || note.trim().length < 3} style={{ ...buttonStyle, background: "var(--accent)", color: "white" }}>
+          <button type="button" onClick={submit} disabled={saving || note.trim().length < 3} style={{ ...buttonStyle, background: "var(--accent)", color: "white" }}>
             {saving ? "Saving..." : "Save resolution"}
           </button>
         </div>

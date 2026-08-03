@@ -157,6 +157,22 @@ create table review_decisions (
   decision_at timestamptz not null default now()
 );
 
+-- Application-level append-only ledger. Exported hashes allow an external archive
+-- to verify ordering and detect edits to a saved audit stream.
+create table audit_events (
+  event_id text primary key,
+  actor_id text not null,
+  actor_role text not null,
+  action text not null,
+  package_id text,
+  resource_type text not null,
+  resource_id text,
+  event_metadata jsonb,
+  previous_event_hash text,
+  event_hash text not null unique,
+  created_at timestamptz not null
+);
+
 create table evaluation_cases (
   eval_case_id text primary key,
   package_id text references document_packages(package_id),
@@ -205,6 +221,12 @@ create index idx_decision_evidence_package_id
 
 create index idx_review_decisions_package_id
   on review_decisions(package_id);
+
+create index idx_audit_events_actor_id
+  on audit_events(actor_id);
+
+create index idx_audit_events_package_id
+  on audit_events(package_id);
 
 create index idx_evaluation_runs_case_id
   on evaluation_runs(eval_case_id);

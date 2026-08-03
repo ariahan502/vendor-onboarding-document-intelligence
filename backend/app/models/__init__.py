@@ -1,4 +1,5 @@
 from app.models.decisioning import (
+    AuditEvent,
     DecisionEvidence,
     FieldReviewOverride,
     FindingResolution,
@@ -22,6 +23,7 @@ from app.models.processing import (
 )
 
 __all__ = [
+    "AuditEvent",
     "DecisionEvidence",
     "FieldReviewOverride",
     "FindingResolution",

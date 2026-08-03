@@ -140,3 +140,21 @@ class FindingResolution(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+class AuditEvent(Base):
+    """Application-owned append-only ledger for privileged workflow actions."""
+
+    __tablename__ = "audit_events"
+
+    event_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    actor_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    actor_role: Mapped[str] = mapped_column(Text, nullable=False)
+    action: Mapped[str] = mapped_column(Text, nullable=False)
+    package_id: Mapped[str | None] = mapped_column(Text, index=True)
+    resource_type: Mapped[str] = mapped_column(Text, nullable=False)
+    resource_id: Mapped[str | None] = mapped_column(Text)
+    event_metadata: Mapped[dict | None] = mapped_column(json_type)
+    previous_event_hash: Mapped[str | None] = mapped_column(Text)
+    event_hash: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

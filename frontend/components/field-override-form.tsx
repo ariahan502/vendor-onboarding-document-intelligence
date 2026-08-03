@@ -18,7 +18,6 @@ export function FieldOverrideForm({
 }: FieldOverrideFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [reviewer, setReviewer] = useState("aria.han");
   const [correctedValue, setCorrectedValue] = useState(originalValue ?? "");
   const [reason, setReason] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -30,7 +29,8 @@ export function FieldOverrideForm({
       setStatusMessage(null);
       await postFieldReviewOverride(packageId, {
         field_id: fieldId,
-        reviewer,
+        // The API replaces this compatibility value with the authenticated actor.
+        reviewer: "session-identity",
         corrected_value: correctedValue,
         correction_reason: reason,
       });
@@ -55,10 +55,10 @@ export function FieldOverrideForm({
       </button>
       {isOpen ? (
         <div style={{ display: "grid", gap: 8 }}>
-          <input value={reviewer} onChange={(event) => setReviewer(event.target.value)} placeholder="Reviewer" style={inputStyle} />
+          <span style={{ color: "var(--muted)", fontSize: 13 }}>Your signed-in identity will be recorded with this correction.</span>
           <input value={correctedValue} onChange={(event) => setCorrectedValue(event.target.value)} placeholder="Corrected value" style={inputStyle} />
           <textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Why is this correction needed?" style={{ ...inputStyle, minHeight: 70, resize: "vertical" }} />
-          <button type="button" onClick={submit} disabled={saving || !reviewer.trim() || !correctedValue.trim() || reason.trim().length < 3} style={{ ...buttonStyle, background: "var(--accent)", color: "white" }}>
+          <button type="button" onClick={submit} disabled={saving || !correctedValue.trim() || reason.trim().length < 3} style={{ ...buttonStyle, background: "var(--accent)", color: "white" }}>
             {saving ? "Saving..." : "Save correction"}
           </button>
         </div>

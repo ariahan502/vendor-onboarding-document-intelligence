@@ -20,7 +20,7 @@ from app.models.decisioning import (
     ValidationFinding,
 )
 from app.models.documents import Document, DocumentPackage, DocumentRequirement, Vendor
-from app.models.processing import ExtractedField, FieldNormalization, ProcessingRun
+from app.models.processing import ExtractedField, FieldNormalization, OcrPageText, ProcessingRun
 from app.config import settings
 from app.services.storage import (
     StorageConfigurationError,
@@ -1080,6 +1080,11 @@ def simulate_package_processing(
     for evidence in existing_evidence:
         db.delete(evidence)
 
+    for artifact in db.scalars(
+        select(OcrPageText).join(Document).where(Document.package_id == package_id)
+    ).all():
+        db.delete(artifact)
+
     existing_resolutions = db.scalars(
         select(FindingResolution).where(FindingResolution.package_id == package_id)
     ).all()
@@ -1115,6 +1120,18 @@ def simulate_package_processing(
         ocr_required_document_ids,
         ocr_completed_document_ids,
     )
+    for document in documents:
+        extraction = text_extractions[document.document_id]
+        if extraction is not None:
+            for page_number, text_content in extraction.pages:
+                db.add(OcrPageText(
+                    ocr_page_text_id=f"ocrtext_{uuid4().hex[:12]}",
+                    document_id=document.document_id,
+                    processing_run_id=extraction_run_id,
+                    page_number=page_number,
+                    source=extraction.source,
+                    text_content=text_content,
+                ))
     extracted_fields, normalizations = _build_processing_fields(
         package, documents, extraction_run_id, text_extractions
     )
@@ -2171,11 +2188,11 @@ def _build_uploaded_pdf_fields(
     name_patterns = {
         "contract": [
             r"(?:vendor legal name|vendor|supplier|service provider)\s*[:\-]\s*"
-            r"([^\n\r]{2,120}?)(?=\s{2,}(?:payment terms|tax id|ein)\s*[:\-]|$)",
+            r"([^\n\r]{2,120}?)(?=\s*(?:payment terms|tax id|ein)\s*[:\-]|$)",
         ],
         "w9": [
             r"(?:vendor legal name|legal name|business name|name)\s*[:\-]\s*"
-            r"([^\n\r]{2,120}?)(?=\s{2,}(?:ein|tax id|ssn)\s*[:\-]|$)",
+            r"([^\n\r]{2,120}?)(?=\s*(?:ein|tax id|ssn)\s*[:\-]|$)",
         ],
     }
     if document.doc_type in name_patterns:
@@ -2216,6 +2233,23 @@ def _build_uploaded_pdf_fields(
                 page_number,
                 value.replace("-", ""),
                 "tax_id_cleanup",
+            )
+        address = _find_pdf_value(
+            pages,
+            [
+                r"(?:business\s+)?address\s*[:\-]\s*"
+                r"([^\n\r]{3,120}(?:\s*[\n\r]+[^\n\r]{3,120}){0,2})"
+            ],
+        )
+        if address is not None:
+            value, page_number = address
+            add_field(
+                "vendor_address",
+                value,
+                "address",
+                page_number,
+                _normalized_text(value),
+                "address_whitespace_normalization",
             )
 
     if document.doc_type == "insurance_certificate":

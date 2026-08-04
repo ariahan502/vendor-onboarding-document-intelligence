@@ -65,6 +65,11 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 - Status: done
 - Outcome: trusted actor identity and role checks protect operational routes; reviewer names are server-controlled; privileged actions emit append-only hash-chained audit events and admins can export the ledger.
 
+### T-011 Actual Azure OCR Validation
+
+- Status: done
+- Outcome: a real scanned W-9 was processed through Azure Document Intelligence; page-level OCR text, extracted legal name and tax ID, and evidence were verified in the reviewer workflow.
+
 ## Now
 
 ### T-014 Production Storage and Deployment
@@ -78,12 +83,6 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 - Outcome: policy catalogue is available through an admin-only API. Versioned edits and evaluation metrics remain next so a rule change cannot silently alter routing.
 
 ## Next
-
-### T-011 Actual Azure OCR Validation
-
-- Status: blocked on Azure access
-- Outcome: configure a Document Intelligence resource and validate a real scanned W-9 through the full OCR path.
-- Acceptance criteria: Azure text reaches extracted fields and source pages; failure paths remain visible and safe.
 
 ## Later
 

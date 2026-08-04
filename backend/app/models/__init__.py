@@ -20,6 +20,7 @@ from app.models.processing import (
     FieldComparison,
     FieldNormalization,
     ProcessingRun,
+    OcrPageText,
 )
 
 __all__ = [
@@ -36,6 +37,7 @@ __all__ = [
     "FieldComparison",
     "FieldNormalization",
     "PolicyRule",
+    "OcrPageText",
     "ProcessingRun",
     "ReviewDecision",
     "RoutingPolicy",

@@ -39,6 +39,20 @@ class ProcessingRun(Base):
     )
 
 
+class OcrPageText(Base):
+    """Page-level OCR output retained for extraction traceability."""
+
+    __tablename__ = "ocr_page_texts"
+
+    ocr_page_text_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("documents.document_id"), nullable=False, index=True)
+    processing_run_id: Mapped[str | None] = mapped_column(ForeignKey("processing_runs.processing_run_id"))
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    text_content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
 class ExtractedField(Base):
     __tablename__ = "extracted_fields"
 

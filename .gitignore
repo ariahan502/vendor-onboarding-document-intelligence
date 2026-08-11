@@ -10,6 +10,9 @@ node_modules/
 dist/
 build/
 .env
+*.env
+*.env.*
+!.env.example
 backend/.env
 frontend/.env.local
 postgres-data/
@@ -17,6 +20,10 @@ dev.db
 backend/dev.db
 backend/dev.db.*.bak
 uploads/
+backend/uploads/
+*.sqlite
+*.sqlite3
+*.db-journal
 .pnpm-store/
 backend/.vendor/
 *.tsbuildinfo

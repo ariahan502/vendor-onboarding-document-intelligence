@@ -12,6 +12,7 @@ import type {
   ReviewDecisionCreateRequest,
   ReviewDecisionCreateResponse,
 } from "../types/packages";
+import { authorizationHeaders } from "./auth";
 
 const DEFAULT_API_BASE = "http://localhost:8000/api";
 
@@ -22,6 +23,7 @@ function getApiBaseUrl() {
 export async function getPackageQueue(): Promise<PackageQueueResponse> {
   const response = await fetch(`${getApiBaseUrl()}/packages/`, {
     cache: "no-store",
+    headers: await authorizationHeaders(),
   });
 
   if (!response.ok) {
@@ -36,6 +38,7 @@ export async function getPackageDetail(
 ): Promise<PackageDetailResponse> {
   const response = await fetch(`${getApiBaseUrl()}/packages/${packageId}`, {
     cache: "no-store",
+    headers: await authorizationHeaders(),
   });
 
   if (!response.ok) {
@@ -52,6 +55,7 @@ export async function postCreatePackage(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(await authorizationHeaders()),
     },
     body: JSON.stringify(payload),
   });
@@ -74,7 +78,7 @@ export async function postUploadDocument(
 
   const response = await fetch(`${getApiBaseUrl()}/packages/${packageId}/documents`, {
     method: "POST",
-    body: formData,
+    headers: await authorizationHeaders(), body: formData,
   });
 
   if (!response.ok) {
@@ -91,7 +95,7 @@ export async function postFieldReviewOverride(
 ): Promise<FieldReviewOverrideCreateResponse> {
   const response = await fetch(`${getApiBaseUrl()}/packages/${packageId}/field-overrides`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authorizationHeaders()) },
     body: JSON.stringify(payload),
   });
 
@@ -109,7 +113,7 @@ export async function postFindingResolution(
 ): Promise<FindingResolutionCreateResponse> {
   const response = await fetch(`${getApiBaseUrl()}/packages/${packageId}/finding-resolutions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authorizationHeaders()) },
     body: JSON.stringify(payload),
   });
 
@@ -139,6 +143,7 @@ export async function postReviewDecision(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(await authorizationHeaders()),
     },
     body: JSON.stringify(payload),
   });
@@ -157,6 +162,7 @@ export async function postSimulateProcessing(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(await authorizationHeaders()),
     },
   });
 
@@ -172,7 +178,7 @@ export async function postProcessQueuedPackage(
 ): Promise<PackageSimulationResponse> {
   const response = await fetch(`${getApiBaseUrl()}/packages/${packageId}/process`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authorizationHeaders()) },
   });
 
   if (!response.ok) {

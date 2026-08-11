@@ -124,14 +124,14 @@ export function ReviewWorkspace({ packet }: ReviewWorkspaceProps) {
         </header>
 
         <section
+          className="review-layout"
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(280px, 0.85fr) minmax(0, 2fr) minmax(340px, 1.1fr)",
             gap: 20,
             alignItems: "start",
           }}
         >
-          <aside className="surface-card" style={{ padding: 18, display: "grid", gap: 18, minWidth: 0, position: "relative", zIndex: 1 }}>
+          <aside className="surface-card review-sidebar" style={{ padding: 18, display: "grid", gap: 18, minWidth: 0 }}>
             <PanelTitle eyebrow="Packet" title="Document List" />
             {packet.documents.length === 0 ? (
               <EmptyState
@@ -264,7 +264,7 @@ export function ReviewWorkspace({ packet }: ReviewWorkspaceProps) {
             </div>
           </aside>
 
-          <section className="surface-card" style={{ padding: 18, minHeight: 900 }}>
+          <section className="surface-card review-document-panel" style={{ padding: 18, minHeight: 900 }}>
             <PanelTitle
               eyebrow="Source Document"
               title={selectedDocument?.file_name ?? "Document viewer"}
@@ -276,7 +276,7 @@ export function ReviewWorkspace({ packet }: ReviewWorkspaceProps) {
             />
           </section>
 
-          <aside className="surface-card" style={{ padding: 18, display: "grid", gap: 18 }}>
+          <aside className="surface-card review-decision-panel" style={{ padding: 18, display: "grid", gap: 18, minWidth: 0 }}>
             <PanelTitle eyebrow="Review" title="Fields, Findings, and Decision" />
 
             <div

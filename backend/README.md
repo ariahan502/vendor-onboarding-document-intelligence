@@ -1,11 +1,14 @@
 # Backend
 
-This folder now contains the first implementation scaffold for:
+This folder contains the FastAPI implementation for:
 
 - FastAPI application startup
 - API routing
 - SQLAlchemy base and session setup
 - domain models aligned to `schema.sql`
+- document intake, storage, deterministic extraction, validation, and OCR fallback
+- reviewer decisions, field corrections, finding resolutions, and audit export
+- policy catalogue and evaluated policy-revision activation
 
 Core package layout:
 
@@ -15,11 +18,11 @@ Core package layout:
 - `app/models/`
 - `app/config.py`
 
-Next implementation steps:
+Run the deterministic regression suite from the repository root:
 
-- connect package queue and packet detail endpoints to the database
-- add seed-loading scripts
-- replace sample service data with SQLAlchemy-backed queries
+```bash
+PYTHONPATH=backend python backend/scripts/evaluate_mvp.py
+```
 
 Database evolution now includes:
 
@@ -35,3 +38,7 @@ Local container setup now exists via:
 - [backend/Dockerfile](/Users/hanlingjuan/Documents/vendor-onboarding-project/backend/Dockerfile)
 - [docker-compose.yml](/Users/hanlingjuan/Documents/vendor-onboarding-project/docker-compose.yml)
 - [LOCAL_RUN.md](/Users/hanlingjuan/Documents/vendor-onboarding-project/LOCAL_RUN.md)
+
+For the public-repository data policy and deployment security requirements, see
+[PRIVACY.md](/Users/hanlingjuan/Documents/vendor-onboarding-project/PRIVACY.md) and
+[SECURITY.md](/Users/hanlingjuan/Documents/vendor-onboarding-project/SECURITY.md).

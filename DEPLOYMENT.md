@@ -12,11 +12,27 @@ Use these managed Azure resources for a production-like deployment:
 - Azure Database for PostgreSQL Flexible Server: application database
 - Azure Blob Storage: private `vendor-documents` container
 - Azure Key Vault: database URL, storage connection string, OCR key
-- Microsoft Entra ID or an API gateway: authenticates users and forwards trusted
-  `X-Actor-ID` and `X-Actor-Role` headers
+- Microsoft Entra ID: issues access tokens that the backend validates directly;
+  API Management is optional as an additional network boundary
 
 The application does not create these resources automatically. That requires an
 Azure subscription with the correct tenant and billing access.
+
+## Release Prerequisite Checklist
+
+Before declaring a cloud release live, the operator must complete the following
+account-owned steps:
+
+- [ ] Provision the resources above and grant the deployment identity least-privilege access.
+- [ ] Populate the required secrets through Key Vault or the platform secret store.
+- [ ] Configure the Entra API and SPA registrations, application roles, scopes, and production redirect URIs.
+- [ ] Restrict network access to the backend; optionally add API Management for rate limiting and perimeter controls.
+- [ ] Run `alembic upgrade head` as a release job and verify `/api/health/ready`.
+- [ ] Retain audit exports outside the application database and perform a test restore.
+
+These are deployment operations, not unimplemented application features. They
+cannot be performed from this repository without the organisation's Azure tenant,
+subscription, and secrets.
 
 ## Required Production Secrets
 
@@ -37,11 +53,13 @@ Set these non-secret environment values:
 ENVIRONMENT=production
 STORAGE_BACKEND=azure_blob
 AUTH_REQUIRED=true
+ENTRA_TENANT_ID=<tenant-guid>
+ENTRA_API_AUDIENCE=api://<api-application-client-id>
 ```
 
 ## Deployment Order
 
-1. Provision the managed database, private blob container, secrets, and identity gateway.
+1. Provision the managed database, private blob container, secrets, and Entra application registrations.
 2. Build and deploy the backend image, then run `alembic upgrade head` as a one-off job.
 3. Deploy the worker with the same database and storage configuration as the backend.
 4. Deploy the frontend with `NEXT_PUBLIC_API_BASE_URL` pointing at the protected API.
@@ -64,8 +82,11 @@ variables through Key Vault and managed identity rather than copying secrets int
 ## Explicit Restrictions
 
 - Blob storage is private; documents are served only through the application API.
-- The current trusted-header role model requires an authenticated proxy. Directly
-  exposing the API without that proxy would allow callers to forge actor headers.
+- Production API calls require a valid Microsoft Entra bearer token. Configure an
+  Entra API application with `intake`, `reviewer`, and `admin` app roles, assign users,
+  and set `ENTRA_TENANT_ID` plus `ENTRA_API_AUDIENCE`. The frontend uses the public
+  `NEXT_PUBLIC_ENTRA_CLIENT_ID`, `NEXT_PUBLIC_ENTRA_TENANT_ID`, and
+  `NEXT_PUBLIC_ENTRA_API_SCOPE` configuration values to sign users in.
 - Audit hashes detect changes to an exported ledger, but exports still need external
   retention and access controls for regulatory-grade immutability.
 - OCR validation remains blocked until an Azure Document Intelligence resource can be accessed.

@@ -11,6 +11,7 @@ from app.models import (  # noqa: F401
     FieldComparison,
     FieldNormalization,
     PolicyRule,
+    PolicyRuleRevision,
     OcrPageText,
     ProcessingRun,
     ReviewDecision,

@@ -158,12 +158,12 @@ def simulate_processing(
     package_id: str, db: Session = Depends(get_db),
     actor: CurrentActor = Depends(require_roles("intake", "admin")),
 ) -> PackageSimulationResponse:
-    """Advance a processing package into a review-ready state for demo purposes."""
+    """Advance a processing package into a review-ready state for local development."""
     response = simulate_package_processing(db, package_id)
     record_audit_event(
         db, actor_id=actor.actor_id, actor_role=actor.role, action="package.processing_started",
         package_id=package_id, resource_type="document_package", resource_id=package_id,
-        event_metadata={"mode": "demo"},
+        event_metadata={"mode": "development"},
     )
     return response
 

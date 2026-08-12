@@ -2,8 +2,8 @@
 
 ## Scope
 
-This repository is a portfolio project, not a hosted service for processing real
-vendor documents. Treat all uploaded content as sensitive by default.
+Treat all uploaded content as sensitive by default. Do not process real vendor
+documents without an approved operating, retention, and access model.
 
 ## Secret handling
 
@@ -27,15 +27,14 @@ not remove it from Git history.
 A real deployment must:
 
 - keep Blob containers private and serve files through the authenticated application
-- use TLS, a managed PostgreSQL database, Key Vault, and a trusted identity gateway
-- keep the backend non-public behind an API gateway
-- validate Entra-issued tokens at the gateway and set actor headers there, never from
-  an untrusted browser request
-- restrict the service to synthetic demo data unless the data owner has approved the
+- use TLS, a managed PostgreSQL database, Key Vault, and a restricted backend network boundary
+- validate Entra-issued access tokens and application roles at the backend; optionally use API
+  Management for perimeter controls
+- restrict the service to synthetic sample data unless the data owner has approved the
   processing, retention, and access model
 
-The current frontend does not implement Entra sign-in. Do not expose the production
-configuration to anonymous public users until that integration exists.
+The frontend implements Entra sign-in. Do not expose the production configuration to
+anonymous public users.
 
 ## Reporting a vulnerability
 

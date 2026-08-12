@@ -1,8 +1,8 @@
-# Privacy and Demo Data Policy
+# Privacy and Sample Data Policy
 
 ## Public repository rule
 
-This repository is a portfolio demonstration and contains only synthetic sample data.
+This repository contains only synthetic sample data.
 Do not add real vendor onboarding packets or any document containing personal,
 financial, tax, banking, contract, insurance, or confidential business information.
 
@@ -13,22 +13,22 @@ In particular, never commit:
 - screenshots, logs, database exports, or audit exports that contain such information
 - cloud credentials, database URLs, OAuth client secrets, or storage connection strings
 
-## Safe demonstration practice
+## Safe sample-data practice
 
 Use fictional vendors and deliberately fake identifiers. A reviewer should be able to
 understand the workflow from the example without being able to identify a real person
 or organisation. The tracked PDFs in `frontend/public/sample-documents/` are synthetic
 ABC placeholders for this reason.
 
-For a public demo, accept only the bundled sample files, or reset uploaded documents
-and database records after each demonstration. Do not let anonymous visitors upload
-documents to a personal cloud account.
+For public access, accept only the bundled sample files, or reset uploaded documents
+and database records after each test session. Do not let anonymous visitors upload
+documents to an individually managed cloud account.
 
 ## Azure processing boundary
 
 When Azure Document Intelligence is enabled, document contents and extraction results
 are sent to that Azure service for analysis. It should therefore be enabled only for
-synthetic demos or with an organisation's approved data-processing agreement. Azure
+synthetic sample-data environments or with an organisation's approved data-processing agreement. Azure
 states that analysis data/results are stored temporarily to return results and can be
 deleted after retrieval; review the service's current regional, retention, and
 compliance terms before using real data.

@@ -17,7 +17,7 @@ We are not trying to build:
 - a full procurement platform
 - a full vendor management system
 - a generic chat-with-PDF app
-- a hackathon multi-agent demo
+- a hackathon-style multi-agent prototype
 
 We are trying to build:
 

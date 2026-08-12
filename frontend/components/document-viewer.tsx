@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { DocumentSummary, EvidenceSummary } from "../types/packages";
 import { getDocumentUrl } from "../lib/api";
+import { authorizationHeaders } from "../lib/auth";
 import { EmptyState } from "./empty-state";
 
 type DocumentViewerProps = {
@@ -21,11 +22,52 @@ export function DocumentViewer({
     evidence[0]?.evidence_id ?? null,
   );
   const [currentPage, setCurrentPage] = useState<number>(evidence[0]?.page_num ?? 1);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfLoadError, setPdfLoadError] = useState(false);
 
   useEffect(() => {
     setSelectedEvidenceId(evidence[0]?.evidence_id ?? null);
     setCurrentPage(evidence[0]?.page_num ?? 1);
   }, [document?.document_id, evidence]);
+
+  useEffect(() => {
+    if (document?.mime_type !== "application/pdf" || !document.file_path) {
+      setPdfUrl(null);
+      setPdfLoadError(false);
+      return;
+    }
+
+    let isCurrent = true;
+    let objectUrl: string | null = null;
+    const filePath = document.file_path;
+    setPdfUrl(null);
+    setPdfLoadError(false);
+
+    async function loadProtectedPdf() {
+      try {
+        const response = await fetch(getDocumentUrl(filePath), {
+          headers: await authorizationHeaders(),
+        });
+        if (!response.ok) throw new Error("Document request failed.");
+
+        objectUrl = URL.createObjectURL(await response.blob());
+        if (isCurrent) {
+          setPdfUrl(objectUrl);
+        } else {
+          URL.revokeObjectURL(objectUrl);
+        }
+      } catch {
+        if (isCurrent) setPdfLoadError(true);
+      }
+    }
+
+    void loadProtectedPdf();
+
+    return () => {
+      isCurrent = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [document?.document_id, document?.file_path, document?.mime_type]);
 
   const selectedEvidence =
     evidence.find((item) => item.evidence_id === selectedEvidenceId) ?? evidence[0] ?? null;
@@ -154,11 +196,29 @@ export function DocumentViewer({
                 background: "white",
               }}
             >
-              <object
-                data={`${getDocumentUrl(document.file_path)}#page=${currentPage}`}
-                type="application/pdf"
-                style={{ width: "100%", minHeight: 420 }}
-              >
+              {pdfUrl ? (
+                <>
+                  <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 12px 0" }}>
+                    <a
+                      href={pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "var(--accent)", fontSize: 13, textDecoration: "underline" }}
+                    >
+                      Open PDF in new tab
+                    </a>
+                  </div>
+                  <object
+                    data={`${pdfUrl}#page=${currentPage}`}
+                    type="application/pdf"
+                    style={{ width: "100%", minHeight: 420 }}
+                  >
+                    <div style={{ padding: 20, color: "var(--muted)", lineHeight: 1.7 }}>
+                      This browser cannot display this PDF inline. Use “Open PDF in new tab”.
+                    </div>
+                  </object>
+                </>
+              ) : pdfLoadError ? (
                 <div
                   style={{
                     padding: 20,
@@ -166,10 +226,12 @@ export function DocumentViewer({
                     lineHeight: 1.7,
                   }}
                 >
-                  This browser could not embed the PDF directly. Open the source file
-                  in a new tab to inspect it.
+                  The protected PDF could not be loaded. Refresh the page and sign in again if
+                  your session has expired.
                 </div>
-              </object>
+              ) : (
+                <div style={{ padding: 20, color: "var(--muted)" }}>Loading protected PDF…</div>
+              )}
             </div>
           ) : null}
 

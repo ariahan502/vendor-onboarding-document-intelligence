@@ -113,3 +113,38 @@ button {
   background: rgba(51, 44, 39, 0.08);
   color: var(--text);
 }
+
+.review-layout {
+  grid-template-columns: minmax(260px, 0.85fr) minmax(0, 2fr) minmax(320px, 1.1fr);
+}
+
+.review-sidebar,
+.review-document-panel,
+.review-decision-panel {
+  min-width: 0;
+}
+
+/* Keep the three-column review desk for genuinely wide monitors only. */
+@media (max-width: 1500px) {
+  .review-layout {
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  }
+
+  .review-decision-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .page-shell {
+    padding: 16px;
+  }
+
+  .review-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-decision-panel {
+    grid-column: auto;
+  }
+}

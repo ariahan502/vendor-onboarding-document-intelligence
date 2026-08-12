@@ -79,12 +79,15 @@ The frontend points to:
 
 `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api`
 
-## 6. What is still missing
+## 6. What is still external to this repository
 
-This setup does not yet include:
+The application and production deployment contract are implemented. The following
+steps require access to your cloud account and are deliberately not performed by
+the repository:
 
-- seed ingestion into the database
-- real DB-backed package queries
+- provisioning the Azure subscription resources described in [DEPLOYMENT.md](/Users/hanlingjuan/Documents/vendor-onboarding-project/DEPLOYMENT.md)
+- configuring Entra application registrations and production secrets
+- supplying a production Azure Document Intelligence resource for OCR
 
 ## 6.1 Optional Azure OCR for scanned PDFs
 
@@ -103,14 +106,15 @@ review finding instead of fabricated fields.
 ## 6.2 Identity, roles, and audit export
 
 Local development uses the configured `DEVELOPMENT_ACTOR_ID` and
-`DEVELOPMENT_ACTOR_ROLE` defaults so the demo works without a login page. In a
-deployed environment, set `AUTH_REQUIRED=true` and place an authenticated gateway
-in front of the API. The gateway must set trusted `X-Actor-ID` and `X-Actor-Role`
-headers; accepted roles are `intake`, `reviewer`, and `admin`.
+`DEVELOPMENT_ACTOR_ROLE` defaults so local development works without a login page. In a
+protected environment, set `AUTH_REQUIRED=true`, `ENTRA_TENANT_ID`, and
+`ENTRA_API_AUDIENCE`. The frontend obtains a Microsoft Entra access token and the
+API validates its signature, issuer, audience, and assigned application role.
+Accepted roles are `intake`, `reviewer`, and `admin`.
 
-The MVP deliberately does not implement its own password, session, or OAuth
-provider. That belongs to the company identity platform (for example Microsoft
-Entra ID), which must authenticate the user before forwarding these headers.
+The MVP does not implement passwords or maintain its own identity provider.
+Microsoft Entra ID is the identity provider. An API gateway is optional as an
+additional network boundary, not a source of trusted actor headers.
 
 Admins can export the append-only audit ledger at:
 
@@ -131,7 +135,7 @@ make evaluate
 
 It creates temporary PDFs and a temporary SQLite database, then verifies the
 missing-insurance, legal-name mismatch, missing-tax-ID, and OCR-required cases.
-It does not modify the local demo queue or send documents to Azure.
+It does not modify the local development queue or send documents to Azure.
 
 ## 6.4 Run queued processing locally
 
@@ -146,15 +150,15 @@ For continuous processing, run `python backend/scripts/run_worker.py` with the
 same `PYTHONPATH` environment used by the backend. Docker Compose starts the worker
 service automatically.
 
-Those are the next implementation steps.
+These are the local processing commands.
 
-## 7. Recommended next step after this
+## 7. Policy governance workflow
 
-Once the stack is running, the most useful next work is:
-
-1. run Alembic migration to create the schema
-2. create seed packet records
-3. replace sample service data with SQLAlchemy queries
+Admins can create a draft policy revision at
+`POST /api/policy-rules/{rule_id}/revisions`. Record its regression scores using
+`POST /api/policy-rules/{rule_id}/revisions/{revision_id}/evaluate`, then activate
+only a passing revision through `POST /api/policy-rules/{rule_id}/revisions/{revision_id}/activate`.
+All four scores must be at least `0.95`; each stage is appended to the audit ledger.
 
 ## 8. Database initialization options
 

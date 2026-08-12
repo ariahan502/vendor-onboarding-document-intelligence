@@ -15,7 +15,7 @@ The SQL definition lives in [schema.sql](/Users/hanlingjuan/Documents/vendor-onb
 
 ## 1. Design principles
 
-The schema is designed around a reviewer decision workflow, not around a generic chatbot or a simple OCR demo.
+The schema is designed around a reviewer decision workflow, not around a generic chatbot or a simple OCR pipeline.
 
 It is built to support:
 
@@ -251,7 +251,7 @@ Key fields:
 
 Why this table matters:
 
-- it makes the system more than an OCR demo
+- it makes the system more than an OCR pipeline
 - it captures one of the real business logic layers in the product
 
 ## 7. Cross-document validation
@@ -523,7 +523,7 @@ But this V1 schema is stronger because it adds the real layers the system depend
 - rule versioning
 - evaluation runs
 
-These additions make the project feel like a real engineered workflow system instead of a one-shot extraction demo.
+These additions make the system a real engineered workflow system rather than a one-shot extraction flow.
 
 ## 12. How this maps to the UI
 

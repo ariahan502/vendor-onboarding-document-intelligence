@@ -8,7 +8,7 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 ### T-001 Product and Data Contract
 
 - Status: done
-- Outcome: practical procurement problem, MVP boundaries, system plan, SQL schema, and demo flow are documented.
+- Outcome: practical procurement problem, MVP boundaries, system plan, SQL schema, and workflow definition are documented.
 
 ### T-002 Reviewer Queue and Decision Workflow
 
@@ -74,13 +74,13 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 
 ### T-014 Production Storage and Deployment
 
-- Status: in progress
-- Outcome: production-ready storage, database, secret, and deployment contracts replace reliance on local files and SQLite. Cloud resource provisioning remains a separate, account-dependent final step.
+- Status: done
+- Outcome: production-ready storage, database, secret, health-check, and deployment contracts replace reliance on local files and SQLite. Cloud resource provisioning remains a separate, account-dependent release prerequisite.
 
 ### T-015 Policy Configuration and Evaluation Dashboard
 
-- Status: in progress
-- Outcome: policy catalogue is available through an admin-only API. Versioned edits and evaluation metrics remain next so a rule change cannot silently alter routing.
+- Status: done
+- Outcome: policy catalogue, versioned rule-revision workflow, regression-score recording, guarded activation, evaluation metrics, and audit events are available through admin-only APIs. A rule revision cannot activate unless all recorded regression scores meet the 0.95 threshold.
 
 ## Next
 

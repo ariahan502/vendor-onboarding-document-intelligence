@@ -4,7 +4,7 @@
 
 Vendor Onboarding Document Intelligence is a bounded enterprise document workflow system for reviewing vendor onboarding packets.
 
-It is not a generic chatbot, not a contract summarizer, and not a multi-agent demo for its own sake.
+It is not a generic chatbot, not a contract summarizer, and not a multi-agent system for its own sake.
 
 The system should help a procurement or finance reviewer answer a practical operational question:
 
@@ -60,7 +60,7 @@ That framing matters because this is fundamentally an operations approval proble
 
 The earlier project discussions converged on a few important decisions:
 
-### 3.1 Focus on one real workflow, not four parallel AI demos
+### 3.1 Focus on one real workflow, not four parallel AI capabilities
 
 Earlier thinking started from a broad "enterprise AI systems" idea spanning retrieval, workflow, code agents, and evaluation. That direction was later narrowed into a more mature approach:
 
@@ -88,7 +88,7 @@ This means we should avoid:
 
 ### 3.3 Evaluation is part of the product, not a final add-on
 
-The prior design work emphasized that the difference between a polished demo and an engineering-quality project is evaluation.
+The prior design work emphasized that the difference between a proof of concept and an engineering-quality system is evaluation.
 
 For this project, evaluation should be present from the start:
 
@@ -308,7 +308,7 @@ These boundaries are important because earlier discussions repeatedly warned aga
 - 8 to 10 extracted fields
 - 5 to 7 deterministic policy rules
 - human-in-the-loop final decision
-- reviewer-facing UI or demo surface
+- reviewer-facing UI
 - evaluation dataset and benchmark
 
 ### 7.2 Out of scope for MVP
@@ -329,7 +329,7 @@ We should describe the project as:
 - a multi-document review and validation system
 - an evaluation-driven document intelligence workflow
 
-For broader portfolio storytelling, we can also describe the underlying pattern as:
+For broader system positioning, the underlying pattern can also be described as:
 
 - enterprise document decision intelligence
 
@@ -435,7 +435,7 @@ Track performance by slice:
 
 ## 10. What maturity looks like
 
-To reach the level of stronger portfolio projects, the project should demonstrate:
+To reach a higher level of operational maturity, the system should demonstrate:
 
 - a specific operational problem
 - clear scope boundaries
@@ -559,7 +559,7 @@ Deliverables:
 
 Exit criteria:
 
-- end-to-end demo is understandable in under 5 minutes
+- end-to-end workflow is understandable in under 5 minutes
 
 ### Phase 7. Add evaluation and observability
 
@@ -574,19 +574,19 @@ Exit criteria:
 
 - you can explain where the system works and where it fails
 
-### Phase 8. Polish for portfolio readiness
+### Phase 8. Production-readiness polish
 
 Deliverables:
 
 - architecture diagram
 - README
-- demo script
+- operational walkthrough
 - screenshots
 - case-study narrative
 
 Exit criteria:
 
-- project can be defended in interviews as an engineering system, not just a demo
+- system behavior and engineering decisions are clearly documented
 
 ## 12. Immediate next tasks
 
@@ -609,7 +609,7 @@ If we execute this well, the project will show that you can:
 - structure a document intelligence workflow around business decisions
 - combine OCR, extraction, validation, rules, and bounded LLM reasoning
 - keep a human in control for consequential decisions
-- evaluate the system like an engineer instead of stopping at a demo
+- evaluate the system like an engineer instead of stopping at a prototype
 
 That is the strongest version of the direction recovered from the earlier discussions.
 

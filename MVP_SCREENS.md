@@ -18,7 +18,7 @@ It should not feel like:
 
 - a chatbot
 - a generic dashboard with no workflow
-- a document upload demo
+- a document upload workflow
 
 ## 2. MVP screen list
 
@@ -301,13 +301,13 @@ Preserve auditability and support trust in the workflow.
 
 ### Why it matters
 
-This makes the product feel like enterprise software instead of a one-time demo.
+This makes the product operate like enterprise software rather than a one-time prototype.
 
 ## 10. Evaluation / Admin Summary
 
 ### Purpose
 
-This is not the primary reviewer screen, but it is important for product maturity and demo credibility.
+This is not the primary reviewer screen, but it is important for product maturity and operational credibility.
 
 ### Main audience
 

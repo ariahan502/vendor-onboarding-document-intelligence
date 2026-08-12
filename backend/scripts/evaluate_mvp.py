@@ -1,7 +1,7 @@
 """Run deterministic regression checks for the vendor onboarding MVP.
 
 The suite creates an isolated SQLite database and temporary PDFs, so it never changes
-the local demo queue. It intentionally leaves Azure OCR unconfigured to verify the
+the local development queue. It intentionally leaves Azure OCR unconfigured to verify the
 safe manual-review fallback for scanned documents.
 """
 
@@ -284,8 +284,81 @@ def main() -> None:
         print("PASS policy_catalogue" if policy_catalogue_passed else "FAIL policy_catalogue")
         if not policy_catalogue_passed:
             failures.append("policy_catalogue did not expose the baseline rules")
+
+        policy_rule = policy_catalogue.json()["rules"][0]
+        policy_revision = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions",
+            json={
+                "proposed_expression": "contract, W-9, and insurance certificate are required",
+                "proposed_severity": "high",
+                "change_reason": "Clarify the document requirement wording.",
+            },
+        )
+        policy_revision.raise_for_status()
+        revision_id = policy_revision.json()["revision_id"]
+        premature_activation = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions/{revision_id}/activate"
+        )
+        rejected_evaluation = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions/{revision_id}/evaluate",
+            json={
+                "case_name": "policy regression failure",
+                "extraction_score": 1,
+                "finding_score": 0.9,
+                "routing_score": 1,
+                "reviewer_agreement_score": 1,
+            },
+        )
+        rejected_activation = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions/{revision_id}/activate"
+        )
+        passing_revision = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions",
+            json={
+                "proposed_expression": "contract, W-9, and insurance certificate must be present",
+                "proposed_severity": "high",
+                "change_reason": "Confirm the original requirement after regression evaluation.",
+            },
+        )
+        passing_revision.raise_for_status()
+        passing_revision_id = passing_revision.json()["revision_id"]
+        passing_evaluation = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions/{passing_revision_id}/evaluate",
+            json={
+                "case_name": "policy regression pass",
+                "case_slice": "required_documents",
+                "extraction_score": 1,
+                "finding_score": 1,
+                "routing_score": 1,
+                "reviewer_agreement_score": 1,
+            },
+        )
+        activation = client.post(
+            f"/api/policy-rules/{policy_rule['rule_id']}/revisions/{passing_revision_id}/activate"
+        )
+        revision_list = client.get(f"/api/policy-rules/{policy_rule['rule_id']}/revisions")
+        revision_guard_passed = (
+            premature_activation.status_code == 422
+            and rejected_evaluation.status_code == 200
+            and rejected_evaluation.json()["status"] == "rejected"
+            and rejected_activation.status_code == 422
+            and passing_evaluation.status_code == 200
+            and passing_evaluation.json()["status"] == "evaluated"
+            and activation.status_code == 200
+            and activation.json()["rule_version"] == "policy-v2"
+            and revision_list.status_code == 200
+            and len(revision_list.json()["revisions"]) == 2
+        )
+        print("PASS policy_revision_guard" if revision_guard_passed else "FAIL policy_revision_guard")
+        if not revision_guard_passed:
+            failures.append("policy_revision_guard allowed an untested rule to activate")
+
         evaluation_summary = client.get("/api/evaluations/summary")
-        evaluation_summary_passed = evaluation_summary.status_code == 200 and evaluation_summary.json()["run_count"] == 0
+        evaluation_summary_passed = (
+            evaluation_summary.status_code == 200
+            and evaluation_summary.json()["run_count"] == 2
+            and evaluation_summary.json()["average_routing_score"] == 1.0
+        )
         print("PASS evaluation_summary" if evaluation_summary_passed else "FAIL evaluation_summary")
         if not evaluation_summary_passed:
             failures.append("evaluation_summary did not return an empty safe baseline")

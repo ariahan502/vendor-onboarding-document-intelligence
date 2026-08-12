@@ -253,3 +253,47 @@ class PolicyRuleSummary(BaseModel):
 
 class PolicyRuleListResponse(BaseModel):
     rules: list[PolicyRuleSummary]
+
+
+class PolicyRevisionCreateRequest(BaseModel):
+    proposed_expression: str = Field(min_length=3, max_length=2000)
+    proposed_severity: str = Field(min_length=3, max_length=30)
+    change_reason: str = Field(min_length=3, max_length=2000)
+
+
+class PolicyRevisionResponse(BaseModel):
+    revision_id: str
+    rule_id: str
+    status: str
+
+
+class PolicyRevisionSummary(PolicyRevisionResponse):
+    proposed_expression: str
+    proposed_severity: str
+    change_reason: str
+    proposed_by: str
+    evaluation_run_id: str | None
+    created_at: datetime
+
+
+class PolicyRevisionListResponse(BaseModel):
+    revisions: list[PolicyRevisionSummary]
+
+
+class PolicyRevisionEvaluateRequest(BaseModel):
+    case_name: str = Field(min_length=3, max_length=255)
+    case_slice: str | None = Field(default=None, max_length=255)
+    extraction_score: float = Field(ge=0, le=1)
+    finding_score: float = Field(ge=0, le=1)
+    routing_score: float = Field(ge=0, le=1)
+    reviewer_agreement_score: float = Field(ge=0, le=1)
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class PolicyRevisionEvaluationResponse(PolicyRevisionResponse):
+    evaluation_run_id: str
+    passed: bool
+
+
+class PolicyRevisionActivationResponse(PolicyRevisionResponse):
+    rule_version: str

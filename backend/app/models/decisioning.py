@@ -24,6 +24,22 @@ class PolicyRule(Base):
     )
 
 
+class PolicyRuleRevision(Base):
+    """Append-only policy change proposal; only evaluated revisions may activate."""
+
+    __tablename__ = "policy_rule_revisions"
+
+    revision_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    rule_id: Mapped[str] = mapped_column(ForeignKey("policy_rules.rule_id"), nullable=False, index=True)
+    proposed_expression: Mapped[str] = mapped_column(Text, nullable=False)
+    proposed_severity: Mapped[str] = mapped_column(Text, nullable=False)
+    change_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    proposed_by: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="draft")
+    evaluation_run_id: Mapped[str | None] = mapped_column(ForeignKey("evaluation_runs.eval_run_id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
 class RoutingPolicy(Base):
     __tablename__ = "routing_policies"
 

@@ -17,7 +17,7 @@ db-shell:
 	docker compose exec postgres psql -U postgres -d vendor_onboarding
 
 evaluate:
-	PYTHONPATH=backend:backend/.vendor python backend/scripts/evaluate_mvp.py
+	PYTHONPATH=backend python backend/scripts/evaluate_mvp.py
 
 worker-once:
-	PYTHONPATH=backend:backend/.vendor python backend/scripts/run_worker.py --once
+	PYTHONPATH=backend python backend/scripts/run_worker.py --once

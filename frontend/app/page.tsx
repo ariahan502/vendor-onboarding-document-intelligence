@@ -1,12 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { EmptyState } from "../components/empty-state";
 import { getPackageQueue } from "../lib/api";
 import { formatDateTime } from "../lib/format";
 import type { PackageQueueItem } from "../types/packages";
 
-export default async function HomePage() {
-  const queue = await getPackageQueue();
+export default function HomePage() {
+  const [queue, setQueue] = useState<Awaited<ReturnType<typeof getPackageQueue>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => { getPackageQueue().then(setQueue).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "Failed to load package queue.")); }, []);
+  if (error) return <main className="state-shell"><div className="surface-card state-card"><h1 className="state-title">Queue unavailable</h1><p className="state-body">{error}</p></div></main>;
+  if (!queue) return <main className="state-shell"><div className="surface-card state-card"><h1 className="state-title">Loading packet queue…</h1></div></main>;
   const orderedItems = [...queue.items].sort(compareQueuePriority);
   const openItems = orderedItems.filter((item) => !isResolved(item.package_status));
   const resolvedItems = orderedItems.filter((item) => isResolved(item.package_status));

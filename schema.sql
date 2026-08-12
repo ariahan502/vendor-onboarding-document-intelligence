@@ -202,6 +202,18 @@ create table evaluation_runs (
   notes text
 );
 
+create table policy_rule_revisions (
+  revision_id text primary key,
+  rule_id text not null references policy_rules(rule_id),
+  proposed_expression text not null,
+  proposed_severity text not null,
+  change_reason text not null,
+  proposed_by text not null,
+  status text not null,
+  evaluation_run_id text references evaluation_runs(eval_run_id),
+  created_at timestamptz not null default now()
+);
+
 create index idx_document_packages_vendor_id
   on document_packages(vendor_id);
 
@@ -231,3 +243,6 @@ create index idx_audit_events_package_id
 
 create index idx_evaluation_runs_case_id
   on evaluation_runs(eval_case_id);
+
+create index idx_policy_rule_revisions_rule_id
+  on policy_rule_revisions(rule_id);

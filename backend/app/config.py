@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     document_intelligence_endpoint: str | None = None
     document_intelligence_api_key: str | None = None
     auth_required: bool = False
+    entra_tenant_id: str | None = None
+    entra_api_audience: str | None = None
     development_actor_id: str = "aria.han"
     development_actor_role: str = "admin"
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
@@ -35,6 +37,8 @@ class Settings(BaseSettings):
             missing.append("Azure Blob Storage configuration")
         if not self.auth_required:
             missing.append("AUTH_REQUIRED=true")
+        if not self.entra_tenant_id or not self.entra_api_audience:
+            missing.append("ENTRA_TENANT_ID and ENTRA_API_AUDIENCE")
         if not self.allowed_cors_origins or any(
             "localhost" in origin or "127.0.0.1" in origin
             for origin in self.allowed_cors_origins

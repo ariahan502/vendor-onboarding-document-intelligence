@@ -1,7 +1,7 @@
 """Run deterministic regression checks for the vendor onboarding MVP.
 
 The suite creates an isolated SQLite database and temporary PDFs, so it never changes
-the local demo queue. It intentionally leaves Azure OCR unconfigured to verify the
+the local development queue. It intentionally leaves Azure OCR unconfigured to verify the
 safe manual-review fallback for scanned documents.
 """
 

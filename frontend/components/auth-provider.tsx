@@ -42,7 +42,7 @@ function AuthenticatedApp({ children }: { children: ReactNode }) {
         setSignInError(error instanceof Error ? error.message : "Microsoft sign-in could not be completed.");
       }
     }
-    return <main className="state-shell"><div className="surface-card state-card"><span className="state-eyebrow">Protected demo</span><h1 className="state-title">Sign in to review packets</h1><p className="state-body">This deployment uses Microsoft Entra ID. Only users assigned an application role can access vendor packet data.</p><button className="state-button" disabled={signingIn} onClick={signIn}>{signingIn ? "Signing in…" : "Sign in with Microsoft"}</button>{signInError ? <p className="state-body" style={{ color: "var(--danger)" }}>{signInError}</p> : null}</div></main>;
+    return <main className="state-shell"><div className="surface-card state-card"><span className="state-eyebrow">Protected workspace</span><h1 className="state-title">Sign in to review packets</h1><p className="state-body">This deployment uses Microsoft Entra ID. Only users assigned an application role can access vendor packet data.</p><button className="state-button" disabled={signingIn} onClick={signIn}>{signingIn ? "Signing in…" : "Sign in with Microsoft"}</button>{signInError ? <p className="state-body" style={{ color: "var(--danger)" }}>{signInError}</p> : null}</div></main>;
   }
   return <>{children}</>;
 }

@@ -106,7 +106,7 @@ review finding instead of fabricated fields.
 ## 6.2 Identity, roles, and audit export
 
 Local development uses the configured `DEVELOPMENT_ACTOR_ID` and
-`DEVELOPMENT_ACTOR_ROLE` defaults so the demo works without a login page. In a
+`DEVELOPMENT_ACTOR_ROLE` defaults so local development works without a login page. In a
 protected environment, set `AUTH_REQUIRED=true`, `ENTRA_TENANT_ID`, and
 `ENTRA_API_AUDIENCE`. The frontend obtains a Microsoft Entra access token and the
 API validates its signature, issuer, audience, and assigned application role.
@@ -135,7 +135,7 @@ make evaluate
 
 It creates temporary PDFs and a temporary SQLite database, then verifies the
 missing-insurance, legal-name mismatch, missing-tax-ID, and OCR-required cases.
-It does not modify the local demo queue or send documents to Azure.
+It does not modify the local development queue or send documents to Azure.
 
 ## 6.4 Run queued processing locally
 

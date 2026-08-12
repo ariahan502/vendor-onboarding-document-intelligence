@@ -2,13 +2,13 @@
 
 ## Goal
 
-Choose a practical, portfolio-quality stack for `Vendor Onboarding Document Intelligence`.
+Choose a practical, production-oriented stack for `Vendor Onboarding Document Intelligence`.
 
 The stack should optimize for:
 
 - fast iteration
 - clean architecture
-- strong demoability
+- clear operability
 - realistic document workflow support
 - easy local development
 - room for evaluation and future expansion
@@ -134,7 +134,7 @@ Why:
 Why:
 
 - makes local setup easier
-- keeps the project demoable
+- keeps the project easy to run locally
 
 ## 2. Architecture shape
 
@@ -300,7 +300,7 @@ Bad uses:
 
 This is the recommended starting point.
 
-### Version B. Portfolio-strong build
+### Version B. Production-oriented build
 
 Add:
 

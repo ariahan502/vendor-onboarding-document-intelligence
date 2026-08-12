@@ -8,7 +8,7 @@ and acceptance criteria so that work can be closed instead of remaining vague.
 ### T-001 Product and Data Contract
 
 - Status: done
-- Outcome: practical procurement problem, MVP boundaries, system plan, SQL schema, and demo flow are documented.
+- Outcome: practical procurement problem, MVP boundaries, system plan, SQL schema, and workflow definition are documented.
 
 ### T-002 Reviewer Queue and Decision Workflow
 

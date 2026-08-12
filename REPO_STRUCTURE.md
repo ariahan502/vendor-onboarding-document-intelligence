@@ -9,7 +9,7 @@ This structure is designed to support:
 - a reviewer-facing frontend
 - a Python backend API
 - background document processing
-- seed data and local demo setup
+- seed data and local development setup
 - future evaluation workflows
 
 ## 1. Recommended top-level layout
@@ -106,7 +106,7 @@ Purpose:
 
 Recommended use:
 
-- synthetic demo packets for local development
+- synthetic sample packets for local development
 - JSON or CSV metadata for expected findings and expected decisions
 
 ### `scripts/`
@@ -126,7 +126,7 @@ This split keeps the project understandable:
 - `backend` owns workflow and business state
 - `worker` owns asynchronous document intelligence
 
-That separation is strong enough to feel like a real system, but still simple enough for a portfolio project.
+That separation supports a real system while remaining simple enough to operate and extend.
 
 ## 4. What not to do
 
@@ -155,5 +155,5 @@ That gives us:
 
 - cleaner iteration
 - clearer architecture story
-- easier demo setup
-- better portfolio quality
+- easier local setup
+- clearer operational boundaries

@@ -379,13 +379,13 @@ def main() -> None:
                 reviewer="system_seed",
                 system_recommendation="needs_review",
                 final_decision="needs_review",
-                reviewer_comment="Seed case for MVP demo and early UI work.",
+                reviewer_comment="Seed case for MVP development and early UI work.",
                 decision_at=datetime.fromisoformat("2026-07-28T10:25:00"),
             )
         )
 
         db.commit()
-        print("Seeded demo vendor onboarding data.")
+        print("Seeded sample vendor onboarding data.")
     finally:
         db.close()
 

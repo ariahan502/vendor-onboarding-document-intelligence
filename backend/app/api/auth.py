@@ -2,7 +2,7 @@
 
 When authentication is required, the API validates Entra bearer tokens itself and
 uses assigned application roles for authorization. Development retains a named
-local actor so the demo remains usable without an identity provider.
+local actor so development remains usable without an identity provider.
 """
 
 from dataclasses import dataclass

@@ -4,8 +4,8 @@ A document-review workflow for vendor onboarding packets. It helps procurement a
 finance reviewers determine whether a packet can move forward, which information is
 missing or inconsistent, and what source evidence supports the recommendation.
 
-This is a portfolio project. It is designed around a bounded, auditable business
-workflow rather than autonomous approval. It is **not** a live production service and
+It is designed around a bounded, auditable business workflow rather than autonomous
+approval. It is **not** a live production service and
 must not be used with real vendor, tax, banking, or contract data.
 
 ## What it does
@@ -52,7 +52,7 @@ Then open `http://localhost:3000`. The API health check is available at
 ### Option 2: Run the regression suite
 
 The suite creates a temporary SQLite database and temporary synthetic PDFs. It never
-modifies the local demo database or calls Azure.
+modifies the local development database or calls Azure.
 
 ```bash
 python3 -m pip install -r backend/requirements.txt
@@ -61,7 +61,7 @@ PYTHONPATH=backend python backend/scripts/evaluate_mvp.py
 
 After installing dependencies, `make evaluate` runs the same suite.
 
-## Demo data and privacy
+## Sample data and privacy
 
 All files under `frontend/public/sample-documents/` are synthetic placeholders. Do not
 commit or upload real W-9s, contracts, insurance certificates, tax IDs, bank details,
@@ -89,12 +89,11 @@ GitHub Actions runs this suite for pushes and pull requests.
 - [DEPLOYMENT.md](DEPLOYMENT.md) — production/staging deployment contract
 - [SCHEMA_V1.md](SCHEMA_V1.md) — data model notes
 
-## Portfolio-safe deployment target
+## Deployment guidance
 
-For a personal portfolio, the recommended endpoint is a short-lived, access-controlled
-staging demo that uses only synthetic documents. Keep Azure credentials in Key Vault,
+For an access-controlled staging environment, use only synthetic documents. Keep Azure credentials in Key Vault,
 restrict API access behind Entra ID/API Management, set a spending budget, and delete
-the resource group after recording a demo. Do not expose a public upload endpoint for
+the resource group when the environment is no longer needed. Do not expose a public upload endpoint for
 real documents.
 
 ## License
